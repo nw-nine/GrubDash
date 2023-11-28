@@ -8,5 +8,7 @@ router.route('/')
     .post(controller.create)
 
 router.route('/:orderId')
+    .get(controller.read)
+    .delete(controller.destroy);
 
 module.exports = router;

@@ -45,24 +45,44 @@ function create(req, res, next) {
 }
 
 function validateOrderExists(req, res, next) {
-    let { id } = req.params;
-    let index = orders.findIndex(order => order.id === id);
-    if (index < 0) {
+    let { orderId } = req.params;
+    console.log(orderId);
+    let index = orders.findIndex(order => order.id === orderId);
+    if (index < 0 || index >= orders.length) {
       // bad news
       next({
         status: 404,
-        message: `could not find order with id ${id}`
+        message: `could not find order with id ${orderId}`
       })
     } else {
       // we found it! save its location for later
       res.locals.index = index;
       next();
     }
-  }
+}
+
+function read (req, res, next) {
+    res.send({ data: orders[res.locals.index] })
+}
+
+function destroy (req, res, next) {
+   let { index } = res.locals
+   const order = orders[index]
+   if(!order) {
+    res.status(404).json({ error: 'Could not find order for deletion'})
+   }
+   if(order.status !== 'pending') {
+    res.status(400).json({ error: 'An order cannot be deleted unless it is pending'})
+   }
+   orders.splice(index, 1)
+   res.status(204).send()
+}
+
+
 
 module.exports = {
     list,
     create: [validateOrder, create],
-
-
+    read: [validateOrderExists, read],
+    destroy: [validateOrderExists, destroy]
 }
