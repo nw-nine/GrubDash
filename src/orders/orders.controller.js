@@ -78,11 +78,61 @@ function destroy (req, res, next) {
    res.status(204).send()
 }
 
+function validateUpdate(req, res, next) {
+    const { orderId } = req.params;
+    const { id, status } = req.body.data;
+    const orderIdToUpdate = id || orderId
+    if (orderIdToUpdate !== orderId) {
+        next({
+            status: 400,
+            message: `Order id does not match route id. Order: ${id}, Route: ${orderId}`
+        }) 
+    }
+    if (!status || !["pending", "preparing", "out-for-delivery", "delivered"].includes(status)) {
+        next({
+            status: 400,
+            message: 'Order must have a status of pending, preparing, out-for-delivery, delivered'
+        })
+    }
+    const index = orders.findIndex(order => order.id === orderId);
+
+    if (index === -1) {
+        next({
+            status: 404,
+            message: `Could not find order with id ${orderId}`
+        })
+    }
+    if (orders[index].status === 'delivered') {
+        next({
+            status: 400,
+            message: 'A delivered order cannot be changed'
+        })
+    }
+    next();
+}
+
+function update(req, res, next) {
+    const { orderId } = req.params;
+    const { deliverTo, mobileNumber, status, dishes } = req.body.data;
+    const updatedOrder = {
+        id: orderId,
+        deliverTo,
+        mobileNumber,
+        status,
+        dishes,
+    };
+    const index = orders.findIndex(order => order.id === orderId);
+    orders[index] = updatedOrder;
+
+    res.json({ data: updatedOrder });
+}
+
 
 
 module.exports = {
     list,
     create: [validateOrder, create],
     read: [validateOrderExists, read],
-    destroy: [validateOrderExists, destroy]
+    destroy: [validateOrderExists, destroy],
+    update: [validateOrderExists, validateOrder, validateUpdate, update]
 }

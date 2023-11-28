@@ -11,17 +11,7 @@ function list(req, res, next) {
     res.send({ data: dishes })
 }
 
-function read(req, res, next) {
-    const { dishId } = req.params
-    const foundDish = dishes.find(dish => dish.id === dishId)
-
-    if(!foundDish) {
-        res.status(404).json({ error: `Dish does not exist: ${dishId}.`})
-    }
-    res.status(200).json({ data: foundDish })  
-}
-
-function create(req, res, next) {
+function validateDish(req, res, next) {
     const { name, description, price, image_url } = req.body.data;
     if (!name) {
         return res.status(400).json({ error: 'Dish must include a name' });
@@ -35,6 +25,10 @@ function create(req, res, next) {
     if (!image_url) {
         return res.status(400).json({ error: 'Dish must include an image_url' });
     }
+}
+
+function create(req, res, next) {
+    const { name, description, price, image_url } = req.body.data;
     const newDish = {
         id: nextId(),
         name,
@@ -47,10 +41,19 @@ function create(req, res, next) {
     res.status(201).json({ data: newDish })
 }
 
+function read(req, res, next) {
+    const { dishId } = req.params
+    const foundDish = dishes.find(dish => dish.id === dishId)
+
+    if(!foundDish) {
+        res.status(404).json({ error: `Dish does not exist: ${dishId}.`})
+    }
+    res.status(200).json({ data: foundDish })  
+}
 
 
 module.exports = {
     list,
-    create,
+    create: [validateDish, create],
     read,
 }
