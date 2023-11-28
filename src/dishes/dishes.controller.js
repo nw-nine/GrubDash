@@ -65,7 +65,13 @@ function read(req, res, next) {
 function validateUpdate(req, res, next) {
     const { dishId } = req.params
     const { id, name, description, price, image_url } = req.body.data
-
+    const dishIdToUpdate = id || dishId
+    if (dishIdToUpdate !== dishId) {
+        next({
+            status: 400,
+            message: `Order id does not match route id. Order: ${id}, Route: ${dishId}`
+        }) 
+    }
     if (!name) {
         return res.status(400).json({ error: 'Dish must include a name' });
     }
@@ -78,6 +84,15 @@ function validateUpdate(req, res, next) {
     if (!image_url) {
         return res.status(400).json({ error: 'Dish must include an image_url' });
     }
+    const index = dishes.findIndex(dish => dish.id === dishId);
+
+    if (index === -1) {
+        next({
+            status: 404,
+            message: `Could not find order with id ${orderId}`
+        })
+    }
+    next()
 }
 
 function update(req, res, next) {
@@ -103,5 +118,5 @@ module.exports = {
     list,
     create: [validateDish, create],
     read: [validateDishExists, read],
-    update: [validateDish, validateDishExists, validateUpdate, update]
+    update: [validateDishExists, validateDish, validateUpdate, update]
 }
