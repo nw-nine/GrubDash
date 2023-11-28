@@ -25,6 +25,7 @@ function validateDish(req, res, next) {
     if (!image_url) {
         return res.status(400).json({ error: 'Dish must include an image_url' });
     }
+    next()
 }
 
 function create(req, res, next) {
@@ -41,19 +42,29 @@ function create(req, res, next) {
     res.status(201).json({ data: newDish })
 }
 
-function read(req, res, next) {
-    const { dishId } = req.params
-    const foundDish = dishes.find(dish => dish.id === dishId)
-
-    if(!foundDish) {
-        res.status(404).json({ error: `Dish does not exist: ${dishId}.`})
+function validateDishExists(req, res, next) {
+    let { dishId } = req.params;
+    let index = dishes.findIndex(dish => dish.id === dishId);
+    if (index < 0 || index >= dishes.length) {
+      // bad news
+      next({
+        status: 404,
+        message: `could not find order with id ${dishId}`
+      })
+    } else {
+      // we found it! save its location for later
+      res.locals.index = index;
+      next();
     }
-    res.status(200).json({ data: foundDish })  
+}
+
+function read(req, res, next) {
+   res.send({ data: dishes[res.locals.index]})
 }
 
 
 module.exports = {
     list,
     create: [validateDish, create],
-    read,
+    read: [validateDishExists, read],
 }

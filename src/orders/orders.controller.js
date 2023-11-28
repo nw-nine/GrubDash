@@ -46,7 +46,6 @@ function create(req, res, next) {
 
 function validateOrderExists(req, res, next) {
     let { orderId } = req.params;
-    console.log(orderId);
     let index = orders.findIndex(order => order.id === orderId);
     if (index < 0 || index >= orders.length) {
       // bad news
