@@ -62,9 +62,46 @@ function read(req, res, next) {
    res.send({ data: dishes[res.locals.index]})
 }
 
+function validateUpdate(req, res, next) {
+    const { dishId } = req.params
+    const { id, name, description, price, image_url } = req.body.data
+
+    if (!name) {
+        return res.status(400).json({ error: 'Dish must include a name' });
+    }
+    if (!description) {
+        return res.status(400).json({ error: 'Dish must include a description' });
+    }
+    if (!price || price <= 0 || !Number.isInteger(price)) {
+        return res.status(400).json({ error: 'Dish must have a price that is an integer greater than 0' });
+    }
+    if (!image_url) {
+        return res.status(400).json({ error: 'Dish must include an image_url' });
+    }
+}
+
+function update(req, res, next) {
+    const { dishId } = req.params;
+    const { name, description, price, image_url } = req.body.data;
+
+    const updatedDish = {
+        id: dishId,
+        name,
+        description,
+        price,
+        image_url
+    };
+
+    const index = dishes.findIndex(dish => dish.id === dishId);
+    dishes[index] = updatedDish;
+
+    res.json({ data: updatedDish });
+}
+
 
 module.exports = {
     list,
     create: [validateDish, create],
     read: [validateDishExists, read],
+    update: [validateDish, validateDishExists, validateUpdate, update]
 }
