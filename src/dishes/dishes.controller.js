@@ -11,6 +11,16 @@ function list(req, res, next) {
     res.send({ data: dishes })
 }
 
+function read(req, res, next) {
+    const { dishId } = req.params
+    const foundDish = dishes.find(dish => dish.id === dishId)
+
+    if(!foundDish) {
+        res.status(404).json({ error: `Dish does not exist: ${dishId}.`})
+    }
+    res.status(200).json({ data: foundDish })  
+}
+
 function create(req, res, next) {
     const { name, description, price, image_url } = req.body.data;
     if (!name) {
@@ -26,7 +36,7 @@ function create(req, res, next) {
         return res.status(400).json({ error: 'Dish must include an image_url' });
     }
     const newDish = {
-        id: nextId,
+        id: nextId(),
         name,
         description,
         price,
@@ -37,8 +47,10 @@ function create(req, res, next) {
     res.status(201).json({ data: newDish })
 }
 
+
+
 module.exports = {
     list,
     create,
-    
+    read,
 }
